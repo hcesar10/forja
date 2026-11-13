@@ -34,7 +34,7 @@ export const EX = {
 };
 
 // Clipes que existem em clips/NN.mp4. Exercício fora desta lista não entra em treino.
-export const CLIPES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 23];
+export const CLIPES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26];
 const tem = (id) => CLIPES.includes(id);
 // Enquanto o clipe de um exercício novo não existe, entra o substituto.
 const RESERVA = { 18: 3, 22: 20, 24: 23, 25: 21, 26: 3 };
