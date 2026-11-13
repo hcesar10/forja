@@ -1,6 +1,6 @@
 // Service worker: baixa tudo na instalação e serve offline (BAR 4.2, 4.4, 4.5).
 // Modelo: o build.py troca a versão e a lista de arquivos e grava o sw.js.
-const VERSAO = 'forja-701a6bbcdc';
+const VERSAO = 'forja-71134a3401';
 const ARQUIVOS = ['./', 'index.html', 'manifest.webmanifest', 'css/app.css', 'js/app.js', 'js/art.js', 'js/audio.js', 'js/data.js', 'js/player.js', 'js/store.js', 'icons/apple-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'clips/01.jpg', 'clips/01.mp4', 'clips/02.jpg', 'clips/02.mp4', 'clips/03.jpg', 'clips/03.mp4', 'clips/04.jpg', 'clips/04.mp4', 'clips/05.jpg', 'clips/05.mp4', 'clips/06.jpg', 'clips/06.mp4', 'clips/07.jpg', 'clips/07.mp4', 'clips/08.jpg', 'clips/08.mp4', 'clips/09.jpg', 'clips/09.mp4', 'clips/10.jpg', 'clips/10.mp4', 'clips/11.jpg', 'clips/11.mp4', 'clips/12.jpg', 'clips/12.mp4', 'clips/13.jpg', 'clips/13.mp4', 'clips/14.jpg', 'clips/14.mp4', 'clips/15.jpg', 'clips/15.mp4', 'clips/16.jpg', 'clips/16.mp4', 'clips/17.jpg', 'clips/17.mp4', 'clips/19.jpg', 'clips/19.mp4', 'clips/20.jpg', 'clips/20.mp4', 'clips/21.jpg', 'clips/21.mp4', 'clips/23.jpg', 'clips/23.mp4'];
 
 self.addEventListener('install', (e) => {

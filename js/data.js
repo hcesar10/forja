@@ -97,19 +97,19 @@ function comPrep(lista, prep) {
 // Aquecimento: movimento, não alongamento parado. O encaixe do quadril entra aqui
 // porque prepara a postura do agachamento; o alongamento segurado fica para o fim, com o corpo quente.
 const aquecimento = () => [
-  f(8, 'aquece', 45, { meta: 'Soltando braços e pernas' }),
+  f(6, 'aquece', 40, { meta: 'Joelho alto, braços soltos' }),
   f(13, 'aquece', 20, { meta: 'Para trás, círculos grandes' }),
   f(14, 'aquece', 25, { meta: 'Metade para cada lado' }),
   f(9, 'aquece', 30, { meta: '5 vezes · é essa a posição da lombar no agachamento' }),
   f(16, 'aquece', 35, { vel: 0.8, meta: 'Devagar, treinando a postura' }),
-  f(ou(24), 'aquece', 30, { meta: 'Subindo o ritmo' }),
+  f(8, 'aquece', 30, { meta: 'Subindo o ritmo' }),
 ];
 
 const voltaCalma = (r) => {
   const extra = r() < 0.5 ? 11 : 12;
   const lados = { 11: ['Perna esquerda esticada', 'Perna direita esticada'], 12: ['Tornozelo direito em cima', 'Tornozelo esquerdo em cima'] }[extra];
   return [
-    f(6, 'leve', 40, { vel: 0.7, meta: 'Ande devagar, baixe a respiração' }),
+    f(8, 'leve', 40, { vel: 0.7, meta: 'Passo leve de um lado para o outro. Baixe a respiração.' }),
     f(9, 'mob', 40, { meta: '6 vezes · segure 5 segundos' }),
     f(10, 'mob', 30, { lado: 'Joelho esquerdo no chão' }),
     f(10, 'mob', 30, { lado: 'Joelho direito no chão', espelhar: true }),
@@ -131,7 +131,7 @@ const META = {
 // Blocos por nível (0..4). "A" = circuito de força; "B" = tiros.
 // 13/11: marcha, bird dog, sentar e levantar, flexão na parede e panturrilha saíram do bloco principal.
 const CIRC_A = [[16, 21, 17, 20, 3, 24], [16, 21, 17, 24, 19, 25], [16, 21, 17, 18, 19, 25], [16, 21, 17, 26, 23, 22], [16, 21, 17, 18, 24, 22, 25]];
-const TIROS_BASE = [24, 20, 16, 7, 19, 8];
+const TIROS_BASE = [24, 20, 16, 7, 19, 17];
 const TIROS = [24, 20, 16, 17, 19, 23, 22, 7];
 const PERNAS = [16, 17, 19, 23, 22, 24];
 const CFG_A = [{ v: 3, w: 40, p: 10, d: 40, fin: 2 }, { v: 3, w: 45, p: 8, d: 35, fin: 3 }, { v: 4, w: 40, p: 7, d: 30, fin: 2 }, { v: 4, w: 45, p: 6, d: 30 }, { v: 3, w: 50, p: 5, d: 25, fin: 2 }];
@@ -153,7 +153,7 @@ export function buildTreino(tipo, opts = {}) {
         const forte = PERNAS.includes(id);
         L.push(f(id, forte ? 'forte' : 'circuito', c.w, { secao: `VOLTA ${v} DE ${voltas}`, meta: META[id], ...(forte ? { vel: 1.15 } : {}) }));
       });
-      if (v < voltas) L.push(f(6, 'desc', c.d, { meta: 'Beba água. Respire pelo nariz.' }));
+      if (v < voltas) L.push(f(13, 'desc', c.d, { meta: 'Beba água. Solte os ombros e respire pelo nariz.' }));
     }
   };
   const tiros = (qtd, forte, leve, rot) => {
@@ -163,7 +163,7 @@ export function buildTreino(tipo, opts = {}) {
       const id = pool[i % pool.length];
       const s = `${rot} ${i + 1} DE ${qtd}`;
       L.push(f(id, 'forte', forte, { secao: s, vel: 1.15, meta: META[id] }));
-      if (i < qtd - 1) L.push(f(6, 'leve', leve, { secao: s, vel: 0.7, meta: 'Ande no lugar e respire fundo' })); // depois do último tiro vem a volta à calma
+      if (i < qtd - 1) L.push(f(8, 'leve', leve, { secao: s, vel: 0.7, meta: 'Passo leve de um lado para o outro. Respire fundo.' })); // depois do último tiro vem a volta à calma
     }
   };
 
@@ -182,10 +182,10 @@ export function buildTreino(tipo, opts = {}) {
   }
   if (tipo === 'X') {
     const pool = embaralha([16, 20, 19, 23, 17, 24], r).slice(0, 4);
-    L = [f(8, 'aquece', 45, { meta: 'Soltando braços e pernas' })];
+    L = [f(6, 'aquece', 45, { meta: 'Joelho alto, braços soltos' })];
     for (let v = 1; v <= 3; v++) {
       pool.forEach((id) => L.push(f(id, 'forte', 35, { secao: `RODADA ${v} DE 3`, vel: 1.15, meta: META[id] })));
-      L.push(f(6, 'leve', 30, { secao: `RODADA ${v} DE 3`, vel: 0.7, meta: 'Respire fundo' }));
+      L.push(f(8, 'leve', 30, { secao: `RODADA ${v} DE 3`, vel: 0.7, meta: 'Passo leve. Respire fundo.' }));
     }
     L.push(f(15, 'resp', 40, { meta: 'Puxe em 4 segundos · solte em 6', ritmo: true }));
     return comPrep(L, 4);
