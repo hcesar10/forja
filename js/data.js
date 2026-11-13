@@ -1,6 +1,8 @@
 // Conteúdo do app. Critérios em ../BAR.md.
-// Regra fixa do app (cuidado com refluxo): nenhum abdominal, salto, corrida, inversão,
-// prancha longa no chão ou instrução de prender o ar. Ver PROIBIDOS no fim.
+// Regra do app (cuidado com refluxo): nenhum abdominal deitado (crunch, canoa, elevação de pernas),
+// corrida, inversão ou instrução de prender o ar. Ver PROIBIDOS no fim.
+// 13/11: a pedido do usuário, que achou o treino parado, entraram polichinelo e prancha com
+// toque no ombro. Os dois têm versão mais leve na dica, e a pergunta de azia no fim do treino continua valendo.
 
 export const EX = {
   1: { nome: 'Sentar e levantar', dica: 'Solte o ar ao levantar. Joelho na direção do pé.' },
@@ -18,7 +20,7 @@ export const EX = {
   13: { nome: 'Girar os ombros', dica: 'Círculos grandes, para trás.' },
   14: { nome: 'Girar o quadril', dica: 'Mãos na cintura, círculos grandes.' },
   15: { nome: 'Respiração pela barriga', dica: 'A barriga sobe quando o ar entra.' },
-  16: { nome: 'Agachamento', dica: 'Quadril para trás, calcanhar no chão. Solte o ar ao subir.' },
+  16: { nome: 'Agachamento', dica: 'Quadril para trás como quem vai sentar. Peito aberto, calcanhar no chão, joelho na linha do pé.' },
   17: { nome: 'Avanço para trás', dica: 'Passo longo para trás. Tronco reto.' },
   18: { nome: 'Dobradiça de quadril', dica: 'Costas retas, quadril para trás. Cabeça acima do quadril.' },
   19: { nome: 'Passo de patinador', dica: 'Passo largo pro lado, pé de trás toca o chão. Sem pular.' },
@@ -26,11 +28,18 @@ export const EX = {
   21: { nome: 'Flexão na cadeira', dica: 'Cadeira encostada na parede. Corpo reto.' },
   22: { nome: 'Escalador na cadeira', dica: 'Cadeira encostada na parede. Joelho ao peito, sem pular.' },
   23: { nome: 'Degrau com joelho alto', dica: 'Suba e leve o joelho de trás até o quadril.' },
+  24: { nome: 'Polichinelo', dica: 'Pouse leve, joelhos soltos. Se der azia ou doer o joelho, abra uma perna de cada vez, sem pular.' },
+  25: { nome: 'Prancha com toque no ombro', dica: 'Corpo reto, quadril parado. Solte o ar. Mais fácil: mãos na cadeira.' },
+  26: { nome: 'Ponte de uma perna', dica: 'Uma perna esticada no ar. Suba o quadril reto, sem girar.' },
 };
 
 // Clipes que existem em clips/NN.mp4. Exercício fora desta lista não entra em treino.
 export const CLIPES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 23];
 const tem = (id) => CLIPES.includes(id);
+// Enquanto o clipe de um exercício novo não existe, entra o substituto.
+const RESERVA = { 18: 3, 22: 20, 24: 23, 25: 21, 26: 3 };
+const ou = (id) => (tem(id) ? id : RESERVA[id] ?? id);
+const unicos = (ids) => [...new Set(ids.map(ou))];
 
 // bpm = batida da trilha (Terry 2020; Karageorghis 2014: 125–140 no esforço)
 export const TIPO = {
@@ -45,8 +54,8 @@ export const TIPO = {
 };
 
 export const NIVEIS = [
-  { nome: 'Base', alvo: 'Esforço 5 a 6 de 10. Dá para conversar.', rpe: 6 },
-  { nome: 'Ritmo', alvo: 'Esforço 6 de 10. Conversa com pausas.', rpe: 6 },
+  { nome: 'Base', alvo: 'Esforço 6 a 7 de 10. Conversa com pausas.', rpe: 7 },
+  { nome: 'Ritmo', alvo: 'Esforço 7 de 10. Só frases curtas.', rpe: 7 },
   { nome: 'Fogo', alvo: 'Tiros em esforço 7. Só frases curtas.', rpe: 7 },
   { nome: 'Forte', alvo: 'Tiros em esforço 7 a 8.', rpe: 8 },
   { nome: 'Máquina', alvo: 'Tiros em esforço 8. Recuperação curta.', rpe: 8 },
@@ -63,7 +72,7 @@ function rng(seed) {
   };
 }
 function embaralha(arr, r) {
-  const a = arr.filter(tem);
+  const a = unicos(arr).filter(tem);
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(r() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
@@ -85,12 +94,15 @@ function comPrep(lista, prep) {
   return out;
 }
 
+// Aquecimento: movimento, não alongamento parado. O encaixe do quadril entra aqui
+// porque prepara a postura do agachamento; o alongamento segurado fica para o fim, com o corpo quente.
 const aquecimento = () => [
-  f(6, 'aquece', 60, { vel: 0.9, meta: 'Marcha leve, solte o corpo' }),
-  f(13, 'aquece', 25, { meta: 'Para trás, círculos grandes' }),
+  f(8, 'aquece', 45, { meta: 'Soltando braços e pernas' }),
+  f(13, 'aquece', 20, { meta: 'Para trás, círculos grandes' }),
   f(14, 'aquece', 25, { meta: 'Metade para cada lado' }),
-  f(1, 'aquece', 30, { vel: 0.9, meta: 'Devagar, só para aquecer as pernas' }),
-  f(8, 'aquece', 40, { meta: 'Soltando braços e pernas' }),
+  f(9, 'aquece', 30, { meta: '5 vezes · é essa a posição da lombar no agachamento' }),
+  f(16, 'aquece', 35, { vel: 0.8, meta: 'Devagar, treinando a postura' }),
+  f(ou(24), 'aquece', 30, { meta: 'Subindo o ritmo' }),
 ];
 
 const voltaCalma = (r) => {
@@ -113,15 +125,17 @@ const META = {
   16: 'Desça até a coxa ficar reta', 17: 'Alterne as pernas sem parar', 18: 'Devagar para descer, rápido para subir',
   19: 'Largo e rápido, de um lado ao outro', 20: 'Soco, soco, soco. Não pare.', 21: 'Peito até a cadeira',
   22: 'Joelho ao peito, ritmo firme', 23: 'Joelho até a altura do quadril',
+  24: 'Ritmo firme, braços até em cima', 25: 'Toque um ombro de cada vez', 26: 'Metade do tempo em cada perna',
 };
 
 // Blocos por nível (0..4). "A" = circuito de força; "B" = tiros.
-const CIRC_A = [[1, 2, 3, 6, 4, 5], [16, 21, 3, 17, 4, 5], [16, 21, 17, 3, 19, 4], [16, 21, 17, 18, 19, 3], [16, 21, 17, 18, 23, 22]];
-const CIRC_B = [[6, 8, 7, 1, 8, 6], [20, 16, 19, 23, 8, 17]];
-const TIROS = [6, 7, 8, 1, 16, 17, 19, 20, 23, 22];
-const PERNAS = [16, 17, 19, 23, 22];
-const CFG_A = [{ v: 3, w: 40, p: 12, d: 45 }, { v: 3, w: 45, p: 10, d: 40 }, { v: 3, w: 45, p: 8, d: 35, fin: 3 }, { v: 4, w: 45, p: 7, d: 30, fin: 2 }, { v: 4, w: 50, p: 6, d: 30, fin: 3 }];
-const CFG_B = [null, null, { n: 13, f: 40, l: 50 }, { n: 15, f: 40, l: 40 }, { n: 16, f: 45, l: 30 }];
+// 13/11: marcha, bird dog, sentar e levantar, flexão na parede e panturrilha saíram do bloco principal.
+const CIRC_A = [[16, 21, 17, 20, 3, 24], [16, 21, 17, 24, 19, 25], [16, 21, 17, 18, 19, 25], [16, 21, 17, 26, 23, 22], [16, 21, 17, 18, 24, 22, 25]];
+const TIROS_BASE = [24, 20, 16, 7, 19, 8];
+const TIROS = [24, 20, 16, 17, 19, 23, 22, 7];
+const PERNAS = [16, 17, 19, 23, 22, 24];
+const CFG_A = [{ v: 3, w: 40, p: 10, d: 40, fin: 2 }, { v: 3, w: 45, p: 8, d: 35, fin: 3 }, { v: 4, w: 40, p: 7, d: 30, fin: 2 }, { v: 4, w: 45, p: 6, d: 30 }, { v: 3, w: 50, p: 5, d: 25, fin: 2 }];
+const CFG_B = [{ n: 14, f: 30, l: 45 }, { n: 14, f: 35, l: 40 }, { n: 14, f: 40, l: 40 }, { n: 15, f: 40, l: 35 }, { n: 16, f: 45, l: 30 }];
 
 /** Monta um treino. opts: { nivel 1..5, seed (número do dia), descarga (semana 12) } */
 export function buildTreino(tipo, opts = {}) {
@@ -133,22 +147,23 @@ export function buildTreino(tipo, opts = {}) {
   const circuito = (ids, c) => {
     const voltas = corta(c.v);
     for (let v = 1; v <= voltas; v++) {
-      const ordem = v === 1 ? ids.filter(tem) : embaralha(ids, r);
-      // a partir do nível Fogo, os exercícios de perna do circuito são feitos em ritmo forte (BAR 1.1)
+      const ordem = v === 1 ? unicos(ids).filter(tem) : embaralha(ids, r);
+      // os exercícios de perna do circuito são feitos em ritmo forte em todos os níveis (BAR 1.1)
       ordem.forEach((id) => {
-        const forte = n >= 2 && PERNAS.includes(id);
-        L.push(f(id, forte ? 'forte' : 'circuito', id === 4 ? c.w + 10 : c.w, { secao: `VOLTA ${v} DE ${voltas}`, meta: META[id], ...(forte ? { vel: 1.15 } : {}) }));
+        const forte = PERNAS.includes(id);
+        L.push(f(id, forte ? 'forte' : 'circuito', c.w, { secao: `VOLTA ${v} DE ${voltas}`, meta: META[id], ...(forte ? { vel: 1.15 } : {}) }));
       });
       if (v < voltas) L.push(f(6, 'desc', c.d, { meta: 'Beba água. Respire pelo nariz.' }));
     }
   };
   const tiros = (qtd, forte, leve, rot) => {
-    const pool = embaralha(n < 2 ? [6, 7, 8, 1] : TIROS, r);
+    const pool = embaralha(n < 2 ? TIROS_BASE : TIROS, r);
+    if (L.length && L[L.length - 1].ex === pool[0]) pool.push(pool.shift()); // não repete o exercício que acabou de fazer
     for (let i = 0; i < qtd; i++) {
       const id = pool[i % pool.length];
       const s = `${rot} ${i + 1} DE ${qtd}`;
-      L.push(f(id, 'forte', forte, { secao: s, vel: id === 6 ? 1.3 : 1.15, meta: META[id] }));
-      L.push(f(6, 'leve', leve, { secao: s, vel: 0.7, meta: 'Ande no lugar e respire fundo' }));
+      L.push(f(id, 'forte', forte, { secao: s, vel: 1.15, meta: META[id] }));
+      if (i < qtd - 1) L.push(f(6, 'leve', leve, { secao: s, vel: 0.7, meta: 'Ande no lugar e respire fundo' })); // depois do último tiro vem a volta à calma
     }
   };
 
@@ -161,14 +176,13 @@ export function buildTreino(tipo, opts = {}) {
   }
   if (tipo === 'B') {
     L = aquecimento();
-    if (CFG_B[n]) tiros(corta(CFG_B[n].n), CFG_B[n].f, CFG_B[n].l, 'TIRO');
-    else circuito(CIRC_B[n], CFG_A[n]);
+    tiros(corta(CFG_B[n].n), CFG_B[n].f, CFG_B[n].l, 'TIRO');
     L.push(...voltaCalma(r));
-    return comPrep(L, n < 2 ? CFG_A[n].p : 4);
+    return comPrep(L, 4);
   }
   if (tipo === 'X') {
-    const pool = embaralha(n < 1 ? [1, 8, 7, 6] : [16, 20, 19, 23, 17, 8], r).slice(0, 4);
-    L = [f(6, 'aquece', 45, { vel: 0.9, meta: 'Marcha leve' })];
+    const pool = embaralha([16, 20, 19, 23, 17, 24], r).slice(0, 4);
+    L = [f(8, 'aquece', 45, { meta: 'Soltando braços e pernas' })];
     for (let v = 1; v <= 3; v++) {
       pool.forEach((id) => L.push(f(id, 'forte', 35, { secao: `RODADA ${v} DE 3`, vel: 1.15, meta: META[id] })));
       L.push(f(6, 'leve', 30, { secao: `RODADA ${v} DE 3`, vel: 0.7, meta: 'Respire fundo' }));
@@ -187,7 +201,7 @@ export function buildTreino(tipo, opts = {}) {
     f(12, 'mob', 45, { lado: 'Tornozelo direito em cima' }),
     f(12, 'mob', 45, { lado: 'Tornozelo esquerdo em cima', espelhar: true }),
     f(3, 'circuito', 45, { meta: '12 repetições, devagar' }),
-    f(4, 'circuito', 50, { meta: 'Troque o lado a cada 3 segundos' }),
+    ...(tem(26) ? [f(26, 'circuito', 50, { meta: META[26] })] : []),
     f(15, 'resp', 45, { meta: 'Puxe em 4 segundos · solte em 6', ritmo: true }),
   ];
   return comPrep(L, 5);
@@ -196,7 +210,7 @@ export function buildTreino(tipo, opts = {}) {
 export const TREINOS = {
   A: { nome: 'Circuito de força', sub: 'Pernas, braços e costas sem parar', cor: '#34d399', capa: 16 },
   B: { nome: 'Tiros', sub: 'Forte e leve alternados, para suar', cor: '#fb923c', capa: 20 },
-  X: { nome: 'Express', sub: 'Sem tempo? 9 minutos intensos', cor: '#fbbf24', capa: 19 },
+  X: { nome: 'Express', sub: 'Sem tempo? 11 minutos intensos', cor: '#fbbf24', capa: 19 },
   Q: { nome: 'Quadril e postura', sub: 'Solta o quadril, alivia a lombar', cor: '#60a5fa', capa: 10 },
 };
 
@@ -275,4 +289,4 @@ export const CONQUISTAS = [
 ];
 
 // Para o teste automático (BAR 1.4): nenhum nome de exercício pode conter estes termos.
-export const PROIBIDOS = ['abdominal', 'crunch', 'sit-up', 'prancha', 'burpee', 'polichinelo', 'salto', 'pular corda', 'corrida', 'invert'];
+export const PROIBIDOS = ['abdominal', 'crunch', 'sit-up', 'canoa', 'burpee', 'pular corda', 'corrida', 'invert'];

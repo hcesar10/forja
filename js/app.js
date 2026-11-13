@@ -114,7 +114,8 @@ function telaTreinos() {
     <section class="cartao nivel-treino"><p class="rot">SEU NÍVEL DE TREINO</p>
       <div class="degraus">${NIVEIS.map((x, i) => `<i class="${i < S.nivelTreino ? 'on' : ''}"></i>`).join('')}</div>
       <h2>${S.nivelTreino}. ${n.nome}</h2><p class="fraco">${n.alvo}</p>
-      <p class="fraco pequeno">O app sobe o nível quando você faz 4 treinos na semana sem achar pesado e sem azia.</p></section>
+      <div class="duo"><button class="bt fantasma" data-a="nivel-treino" data-d="-1"${S.nivelTreino <= 1 ? ' disabled' : ''}>Mais leve</button><button class="bt fantasma" data-a="nivel-treino" data-d="1"${S.nivelTreino >= 5 ? ' disabled' : ''}>Mais puxado</button></div>
+      <p class="fraco pequeno">Achou fácil? Suba aqui. O app também sugere subir depois de 4 treinos na semana sem achar pesado e sem azia.</p></section>
     <section class="lista-treinos">${Object.entries(TREINOS).map(([k, t]) => {
       const r = resumoTreino(buildTreino(k, optsTreino()), S.perfil.kg);
       return `<button class="cartao treino-item" data-a="treino" data-t="${k}" style="--cor:${t.cor}">
@@ -374,6 +375,7 @@ const acoes = {
   importar() { $('#arq').click(); },
   apagar() { modal(`<h2>Apagar tudo?</h2><p class="fraco">Nível, XP, treinos e medidas somem deste aparelho. Não dá para desfazer.</p><button class="bt perigo grande" data-a="apagar-sim">Apagar tudo</button><button class="bt fantasma" data-a="fechar">Cancelar</button>`); },
   'apagar-sim'() { st.substituir(st.novoEstado()); fechar(); ob.i = 0; boasVindas(); },
+  'nivel-treino'(el) { S.nivelTreino = Math.min(5, Math.max(1, S.nivelTreino + +el.dataset.d)); st.conferirConquistas(); st.salvar(); redesenhar(); },
   'ob-primeira'() { som.iniciarAudio(); comemorar(st.ganharXP(10), 10); st.pedirPersistencia(); ob.i = 1; setTimeout(boasVindas, 650); },
   'ob-prox'() { lerOnboarding(); ob.i++; boasVindas(); },
   'ob-folego'(el) { ob.folego = +el.dataset.i; S.nivelTreino = +el.dataset.n; boasVindas(); },
