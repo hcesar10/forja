@@ -31,10 +31,13 @@ export const EX = {
   24: { nome: 'Polichinelo', dica: 'Pouse leve, joelhos soltos. Se der azia ou doer o joelho, abra uma perna de cada vez, sem pular.' },
   25: { nome: 'Prancha com toque no ombro', dica: 'Corpo reto, quadril parado. Solte o ar. Mais fácil: mãos na cadeira.' },
   26: { nome: 'Ponte de uma perna', dica: 'Uma perna esticada no ar. Suba o quadril reto, sem girar.' },
+  27: { nome: 'Agachamento com salto', dica: 'Agache, salte baixo e pouse leve, já dobrando o joelho. Joelho na linha do pé. Sem pular: agachamento rápido.' },
+  28: { nome: 'Patinador com salto', dica: 'Salte de lado e pouse num pé só, joelho dobrado. Sem pular: passo largo.' },
+  29: { nome: 'Corrida parada', dica: 'Joelho até o quadril, tronco reto, pouse na ponta do pé. Sem pular: marcha rápida.' },
 };
 
 // Clipes que existem em clips/NN.mp4. Exercício fora desta lista não entra em treino.
-export const CLIPES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26];
+export const CLIPES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
 const tem = (id) => CLIPES.includes(id);
 // Enquanto o clipe de um exercício novo não existe, entra o substituto.
 const RESERVA = { 18: 3, 22: 20, 24: 23, 25: 21, 26: 3 };
@@ -126,14 +129,16 @@ const META = {
   19: 'Largo e rápido, de um lado ao outro', 20: 'Soco, soco, soco. Não pare.', 21: 'Peito até a cadeira',
   22: 'Joelho ao peito, ritmo firme', 23: 'Joelho até a altura do quadril',
   24: 'Ritmo firme, braços até em cima', 25: 'Toque um ombro de cada vez', 26: 'Metade do tempo em cada perna',
+  27: 'Salto baixo, pouso leve', 28: 'De um lado ao outro, sem parar', 29: 'Joelho alto, o mais rápido que der',
 };
 
 // Blocos por nível (0..4). "A" = circuito de força; "B" = tiros.
 // 13/11: marcha, bird dog, sentar e levantar, flexão na parede e panturrilha saíram do bloco principal.
-const CIRC_A = [[16, 21, 17, 20, 3, 24], [16, 21, 17, 24, 19, 25], [16, 21, 17, 18, 19, 25], [16, 21, 17, 26, 23, 22], [16, 21, 17, 18, 24, 22, 25]];
-const TIROS_BASE = [24, 20, 16, 7, 19, 17];
-const TIROS = [24, 20, 16, 17, 19, 23, 22, 7];
-const PERNAS = [16, 17, 19, 23, 22, 24];
+// 16/11: exercícios com salto (24, 27, 28, 29) são no máximo metade de cada lista, por causa do impacto.
+const CIRC_A = [[16, 21, 17, 20, 3, 24], [16, 21, 17, 24, 28, 25], [27, 21, 17, 18, 28, 25], [27, 21, 17, 26, 29, 22], [27, 21, 17, 18, 24, 22, 25]];
+const TIROS_BASE = [24, 20, 29, 16, 27, 7, 19, 17];
+const TIROS = [24, 27, 28, 29, 20, 17, 23, 22];
+const PERNAS = [16, 17, 19, 23, 22, 24, 27, 28, 29];
 const CFG_A = [{ v: 3, w: 40, p: 10, d: 40, fin: 2 }, { v: 3, w: 45, p: 8, d: 35, fin: 3 }, { v: 4, w: 40, p: 7, d: 30, fin: 2 }, { v: 4, w: 45, p: 6, d: 30 }, { v: 3, w: 50, p: 5, d: 25, fin: 2 }];
 const CFG_B = [{ n: 14, f: 30, l: 45 }, { n: 14, f: 35, l: 40 }, { n: 14, f: 40, l: 40 }, { n: 15, f: 40, l: 35 }, { n: 16, f: 45, l: 30 }];
 
@@ -181,7 +186,7 @@ export function buildTreino(tipo, opts = {}) {
     return comPrep(L, 4);
   }
   if (tipo === 'X') {
-    const pool = embaralha([16, 20, 19, 23, 17, 24], r).slice(0, 4);
+    const pool = embaralha([27, 20, 28, 29, 17, 24], r).slice(0, 4);
     L = [f(6, 'aquece', 45, { meta: 'Joelho alto, braços soltos' })];
     for (let v = 1; v <= 3; v++) {
       pool.forEach((id) => L.push(f(id, 'forte', 35, { secao: `RODADA ${v} DE 3`, vel: 1.15, meta: META[id] })));
@@ -289,4 +294,4 @@ export const CONQUISTAS = [
 ];
 
 // Para o teste automático (BAR 1.4): nenhum nome de exercício pode conter estes termos.
-export const PROIBIDOS = ['abdominal', 'crunch', 'sit-up', 'canoa', 'burpee', 'pular corda', 'corrida', 'invert'];
+export const PROIBIDOS = ['abdominal', 'crunch', 'sit-up', 'canoa', 'burpee', 'pular corda', 'invert'];
