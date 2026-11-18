@@ -34,13 +34,14 @@ export const EX = {
   27: { nome: 'Agachamento com salto', dica: 'Agache, salte baixo e pouse leve, já dobrando o joelho. Joelho na linha do pé. Sem pular: agachamento rápido.' },
   28: { nome: 'Patinador com salto', dica: 'Salte de lado e pouse num pé só, joelho dobrado. Sem pular: passo largo.' },
   29: { nome: 'Corrida parada', dica: 'Joelho até o quadril, tronco reto, pouse na ponta do pé. Sem pular: marcha rápida.' },
+  30: { nome: 'Flexão no chão', dica: 'Corpo reto, solte o ar ao subir. Mais fácil: joelhos no chão.' },
 };
 
 // Clipes que existem em clips/NN.mp4. Exercício fora desta lista não entra em treino.
 export const CLIPES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
 const tem = (id) => CLIPES.includes(id);
 // Enquanto o clipe de um exercício novo não existe, entra o substituto.
-const RESERVA = { 18: 3, 22: 20, 24: 23, 25: 21, 26: 3 };
+const RESERVA = { 18: 3, 22: 20, 24: 23, 25: 21, 26: 3, 30: 21 }; // 30: falta o clipe da flexão no chão
 const ou = (id) => (tem(id) ? id : RESERVA[id] ?? id);
 const unicos = (ids) => [...new Set(ids.map(ou))];
 
@@ -130,14 +131,22 @@ const META = {
   22: 'Joelho ao peito, ritmo firme', 23: 'Joelho até a altura do quadril',
   24: 'Ritmo firme, braços até em cima', 25: 'Toque um ombro de cada vez', 26: 'Metade do tempo em cada perna',
   27: 'Salto baixo, pouso leve', 28: 'De um lado ao outro, sem parar', 29: 'Joelho alto, o mais rápido que der',
+  30: 'Quantas der com o corpo reto',
 };
 
 // Blocos por nível (0..4). "A" = circuito de força; "B" = tiros.
 // 13/11: marcha, bird dog, sentar e levantar, flexão na parede e panturrilha saíram do bloco principal.
 // 16/11: exercícios com salto (24, 27, 28, 29) são no máximo metade de cada lista, por causa do impacto.
-const CIRC_A = [[16, 21, 17, 20, 3, 24], [16, 21, 17, 24, 28, 25], [27, 21, 17, 18, 28, 25], [27, 21, 17, 26, 29, 22], [27, 21, 17, 18, 24, 22, 25]];
-const TIROS_BASE = [24, 20, 29, 16, 27, 7, 19, 17];
-const TIROS = [24, 27, 28, 29, 20, 17, 23, 22];
+// 18/11: foco do usuário = cintura. Saíram do circuito a ponte (deitado, gasta pouco) e o boxe (só braço);
+// o degrau saiu de tudo (não há degrau em casa). Força e tiros separados a pedido dele: os exercícios
+// só de fôlego (polichinelo, patinador, corrida parada) ficam nos tiros; a panturrilha entra na força.
+// O 21 aqui é a vaga da flexão, trocada volta a volta por FLEXAO.
+// 18/11 (depois): o polichinelo voltou à força, a pedido dele ("ainda preciso cansar e suar").
+const CIRC_A = [[16, 21, 17, 18, 5, 24], [16, 21, 17, 18, 5, 24], [27, 21, 17, 18, 5, 24], [27, 21, 17, 18, 5, 24], [27, 21, 17, 18, 5, 24, 25]];
+// Flexão por volta e nível (pedido do usuário): parede, parede, cadeira → só cadeira → entra o chão aos poucos → só chão.
+const FLEXAO = [[2, 2, 21], [21, 21, 21], [21, 21, 21, 30], [21, 21, 30, 30], [30, 30, 30]];
+const TIROS_BASE = [24, 20, 29, 16, 27, 22, 19, 17];
+const TIROS = [24, 27, 28, 29, 20, 17, 19, 22];
 const PERNAS = [16, 17, 19, 23, 22, 24, 27, 28, 29];
 const CFG_A = [{ v: 3, w: 40, p: 10, d: 40, fin: 2 }, { v: 3, w: 45, p: 8, d: 35, fin: 3 }, { v: 4, w: 40, p: 7, d: 30, fin: 2 }, { v: 4, w: 45, p: 6, d: 30 }, { v: 3, w: 50, p: 5, d: 25, fin: 2 }];
 const CFG_B = [{ n: 14, f: 30, l: 45 }, { n: 14, f: 35, l: 40 }, { n: 14, f: 40, l: 40 }, { n: 15, f: 40, l: 35 }, { n: 16, f: 45, l: 30 }];
@@ -154,7 +163,8 @@ export function buildTreino(tipo, opts = {}) {
     for (let v = 1; v <= voltas; v++) {
       const ordem = v === 1 ? unicos(ids).filter(tem) : embaralha(ids, r);
       // os exercícios de perna do circuito são feitos em ritmo forte em todos os níveis (BAR 1.1)
-      ordem.forEach((id) => {
+      ordem.forEach((vaga) => {
+        const id = vaga === 21 ? ou(FLEXAO[n][Math.min(v, FLEXAO[n].length) - 1]) : vaga;
         const forte = PERNAS.includes(id);
         L.push(f(id, forte ? 'forte' : 'circuito', c.w, { secao: `VOLTA ${v} DE ${voltas}`, meta: META[id], ...(forte ? { vel: 1.15 } : {}) }));
       });
@@ -227,10 +237,11 @@ export const resumoTreino = (fases, kg) => {
   return { min: Math.round(seg / 60), kcal: Math.round(kcal), xp, forteMin: Math.round(forte / 60) };
 };
 
-/** 0=domingo. Seg/qua/sex circuito, ter/qui tiros. Dia de esporte e domingo: sem treino obrigatório. */
+/** 0=domingo. 18/11, pedido do usuário (cintura): seg/ter/qui tiros, qua/sex força.
+ * Com o esporte na terça, ficam 2 dias de tiros e 2 de força no app, alternados. Domingo: sem treino. */
 export const treinoDoDia = (dow, diaEsporte) => {
   if (dow === diaEsporte) return null;
-  return [null, 'A', 'B', 'A', 'B', 'A', null][dow];
+  return [null, 'B', 'B', 'A', 'B', 'A', null][dow];
 };
 
 // Missões. meta = quantas marcações no dia. minima = conta para manter a sequência (todas contam).
