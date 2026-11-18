@@ -40,20 +40,20 @@ export function comemorar(r, xp) {
   if (xp) { aviso(`${icone('estrela')}<b>+${xp} XP</b>`, 'xp'); depoisDePintar(() => { som.iniciarAudio(); som.somXP(); som.vibrar(30); }); }
   if (r?.perfeito) setTimeout(() => aviso(`${icone('trofeu')}<b>Dia perfeito</b> +50 XP`, 'ouro'), 500);
   r?.novas?.forEach((c, i) => setTimeout(() => aviso(`${icone('trofeu')}<span><b>${esc(c.nome)}</b><br>${esc(c.desc)}</span>`, 'ouro'), 900 + i * 700));
-  if (r?.subiu) setTimeout(() => {
+  const evo = st.estagioNovo(); // o personagem muda pelos treinos completos, não pelo nível
+  if (r?.subiu || evo >= 0) setTimeout(() => {
     som.somNivel(); som.vibrar([40, 60, 40, 60, 120]);
-    const e = st.estagio(r.subiu);
-    modal(`<div class="subiu"><div class="raios"></div>${heroi(e, { id: 'm' })}<p class="rot">NÍVEL ${r.subiu}</p>
-      <h2>${r.estagioNovo >= 0 ? 'Você evoluiu: ' + TITULOS[e] : 'Subiu de nível'}</h2>
-      <p class="fraco">${r.estagioNovo >= 0 ? 'Seu personagem ganhou um visual novo.' : `Faltam ${proximoEstagio(r.subiu)} níveis para a próxima evolução.`}</p>
+    const e = evo >= 0 ? evo : st.estagio(), falta = st.faltamTreinos();
+    modal(`<div class="subiu"><div class="raios"></div>${heroi(e, { id: 'm' })}<p class="rot">NÍVEL ${r?.subiu || st.nivel().n}</p>
+      <h2>${evo >= 0 ? 'Você evoluiu: ' + TITULOS[e] : 'Subiu de nível'}</h2>
+      <p class="fraco">${evo >= 0 ? 'Seu personagem ganhou um visual novo.' : falta ? `Faltam ${falta} ${falta === 1 ? 'treino' : 'treinos'} para a próxima evolução.` : 'Seu personagem está no auge.'}</p>
       <button class="bt primario" data-a="fechar">Continuar</button></div>`, 'centro');
   }, 600);
 }
-const proximoEstagio = (n) => { const alvo = [3, 6, 10, 15, 21].find((x) => x > n); return alvo ? alvo - n : 0; };
 
 // ---------- telas
 function cabecalhoHeroi() {
-  const nv = st.nivel(), e = st.estagio(nv.n), p = Math.max(0.03, nv.pct);
+  const nv = st.nivel(), e = st.estagio(), p = Math.max(0.03, nv.pct);
   const de = !xpVisto ? p : xpVisto.n === nv.n ? xpVisto.p : 0.03;
   const ganhou = xpVisto && (nv.n > xpVisto.n || p > xpVisto.p);
   xpVisto = { n: nv.n, p };
@@ -463,7 +463,7 @@ addEventListener('hashchange', () => { const h = location.hash.slice(1); if (S.p
 function estadoDemo() {
   const s = st.novoEstado();
   Object.assign(s.perfil, { nome: 'Alex', kg: 88, pronto: true, diaEsporte: 6, gatilhos: { sono: MISSOES[1].gatilhos[0], caminhada: MISSOES[2].gatilhos[0] } });
-  s.inicio = st.maisDias(st.hoje(), -40); s.nivelTreino = 3; s.xp = 2380;
+  s.inicio = st.maisDias(st.hoje(), -40); s.nivelTreino = 3; s.xp = 2380; s.estagioVisto = 5; // sem modal de evolução na demo
   for (let i = 40; i >= 1; i--) { const k = st.maisDias(st.hoje(), -i), dow = st.deChave(k).getDay(); if (i % 9 === 4) continue; s.dias[k] = { xp: 60 + ((i * 37) % 200), m: {}, perfeito: i % 6 === 0 };
     if (dow >= 1 && dow <= 5) s.treinos.push({ d: k, tipo: dow % 2 ? 'A' : 'B', nivel: i > 20 ? 2 : 3, min: 28 + (i % 4), kcal: 210, xp: 250, rpe: 6 + (i % 3), azia: false }); }
   for (let w = 5; w >= 0; w--) s.medidas.push({ d: st.maisDias(st.hoje(), -w * 7), kg: +(89.6 - (5 - w) * 0.5).toFixed(1), cintura: +(101 - (5 - w) * 0.8).toFixed(1) });

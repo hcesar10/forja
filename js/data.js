@@ -281,7 +281,9 @@ export const ALERTAS = [
 ];
 
 export const TITULOS = ['Recomeço', 'Aprendiz', 'Guerreiro', 'Atleta', 'Campeão', 'Lenda'];
-export const ESTAGIO_NIVEL = [1, 3, 6, 10, 15, 21]; // nível em que cada estágio do personagem começa
+// Treinos completos (10 min ou mais) para cada estágio do personagem. 18/11, pedido do usuário: mudava
+// rápido demais pelo XP (estágio 3 em 3 dias). Com 4 treinos por semana: semanas 2, 4, 6, 9 e 12.
+export const ESTAGIO_TREINOS = [0, 8, 16, 24, 36, 48];
 
 export const CONQUISTAS = [
   { id: 'm1', ic: 'check', nome: 'Primeiro passo', desc: 'Primeira missão cumprida', ok: (s) => s.xp > 0 },

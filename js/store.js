@@ -1,5 +1,5 @@
 // Estado do app. Tudo fica só no aparelho (IndexedDB). Nada pessoal vai para o servidor.
-import { MISSOES, CONQUISTAS, ESTAGIO_NIVEL, treinoDoDia } from './data.js';
+import { MISSOES, CONQUISTAS, ESTAGIO_TREINOS, treinoDoDia } from './data.js';
 
 const DB = 'forja', LOJA = 'kv', CHAVE = 'estado';
 
@@ -13,6 +13,7 @@ export const novoEstado = () => ({
   treinos: [], // { d, tipo, nivel, min, kcal, xp, rpe, azia }
   medidas: [], // { d, kg, cintura }
   conquistas: {}, // id: data
+  estagioVisto: 0, // último estágio do personagem já comemorado
   ajustes: { musica: true, voz: true, volMusica: 0.5 },
   backupEm: null,
 });
@@ -72,7 +73,17 @@ export function nivel(xp = S.xp) {
   while (resto >= xpDoNivel(n)) { resto -= xpDoNivel(n); n++; }
   return { n, resto, falta: xpDoNivel(n), pct: resto / xpDoNivel(n) };
 }
-export const estagio = (n = nivel().n) => ESTAGIO_NIVEL.filter((x) => n >= x).length - 1;
+// Estágio do personagem pelos treinos completos, não pelo XP (ver ESTAGIO_TREINOS).
+const treinosQueContam = () => S.treinos.filter((t) => t.min >= 10).length;
+export const estagio = () => ESTAGIO_TREINOS.filter((x) => treinosQueContam() >= x).length - 1;
+export const faltamTreinos = () => { const alvo = ESTAGIO_TREINOS.find((x) => x > treinosQueContam()); return alvo ? alvo - treinosQueContam() : 0; };
+/** Estágio novo ainda não comemorado (e marca como visto), ou -1. */
+export function estagioNovo() {
+  const e = estagio();
+  if (e <= (S.estagioVisto ?? 0)) return -1;
+  S.estagioVisto = e; salvar();
+  return e;
+}
 
 // ---- sequência que perdoa (BAR 3.2 a 3.4)
 // Dia ativo = pelo menos 1 missão. Sábado e domingo parados não quebram. Até 2 congelamentos por semana.
@@ -127,7 +138,7 @@ export function ganharXP(qtd, k = hoje()) {
   if (!dia(k).perfeito && ms.every((m) => m.completa)) { dia(k).perfeito = true; perfeito = true; S.xp += 50; dia(k).xp += 50; }
   const novas = conferirConquistas();
   salvar();
-  return { subiu: depois.n > antes.n ? depois.n : 0, estagioNovo: estagio(depois.n) > estagio(antes.n) ? estagio(depois.n) : -1, perfeito, novas };
+  return { subiu: depois.n > antes.n ? depois.n : 0, perfeito, novas };
 }
 
 export function marcar(id, k = hoje()) {

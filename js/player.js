@@ -156,7 +156,7 @@ function fim(completo) {
   som.falar('Treino completo! Mandou bem.', st.S.ajustes.voz);
   const nv = st.nivel(), seq = st.sequencia().seq, min = Math.round(P.seg / 60);
   sobre.innerHTML = `<div class="fim"><div class="confete">${Array.from({ length: 28 }, (_, i) => `<i style="--x:${(i * 37) % 100}%;--d:${(i % 7) * 0.12}s;--c:${['#34d399', '#fbbf24', '#60a5fa', '#f472b6'][i % 4]}"></i>`).join('')}</div>
-    <div class="fim-arte">${heroi(st.estagio(nv.n), { id: 'f' })}</div>
+    <div class="fim-arte">${heroi(st.estagio(), { id: 'f' })}</div>
     <p class="rot">${TREINOS[P.tipo].nome.toUpperCase()}</p><h1>Treino completo</h1>
     <section class="tres"><div><b>${min}</b><span>minutos</span></div><div><b>${Math.round(P.kcal)}</b><span>kcal</span></div><div><b>+${xp}</b><span>XP</span></div></section>
     <div class="fim-nivel"><span>Nível ${nv.n}</span><div class="barra"><i style="--p:${Math.max(0.03, nv.pct)}"></i></div><span>${icone('fogo')}${seq}</span></div>
