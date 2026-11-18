@@ -159,7 +159,7 @@ function fim(completo) {
     <div class="fim-arte">${heroi(st.estagio(nv.n), { id: 'f' })}</div>
     <p class="rot">${TREINOS[P.tipo].nome.toUpperCase()}</p><h1>Treino completo</h1>
     <section class="tres"><div><b>${min}</b><span>minutos</span></div><div><b>${Math.round(P.kcal)}</b><span>kcal</span></div><div><b>+${xp}</b><span>XP</span></div></section>
-    <div class="fim-nivel"><span>Nível ${nv.n}</span><div class="barra"><i style="width:${Math.max(3, nv.pct * 100)}%"></i></div><span>${icone('fogo')}${seq}</span></div>
+    <div class="fim-nivel"><span>Nível ${nv.n}</span><div class="barra"><i style="--p:${Math.max(0.03, nv.pct)}"></i></div><span>${icone('fogo')}${seq}</span></div>
     <section class="cartao"><p class="rot">QUANTO ESFORÇO FOI?</p><div class="rpe">${Array.from({ length: 10 }, (_, i) => `<button data-p="rpe" data-v="${i + 1}">${i + 1}</button>`).join('')}</div>
       <p class="rpe-leg"><span>muito leve</span><span>no limite</span></p></section>
     <section class="cartao"><p class="rot">SENTIU AZIA OU QUEIMAÇÃO?</p><div class="duo"><button class="opcao" data-p="azia" data-v="0">Não</button><button class="opcao" data-p="azia" data-v="1">Sim</button></div></section>

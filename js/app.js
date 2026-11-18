@@ -13,6 +13,13 @@ const D1 = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const instalado = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 let instalar = null; // evento beforeinstallprompt guardado
 let rota = 'hoje';
+const reduz = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+let xpVisto = null; // { n, p } da barra de XP na última vez, para ela encher a partir dali
+let tocou = null; // { id, xp } da missão recém-marcada: anima o ícone e mostra o +XP voando
+const numVisto = {}; // valor anterior de cada número de .tres, para contar a partir dele
+const anelVisto = {}; // fração anterior de cada anel do Hoje, para ele fechar a partir dali
+// Som e vibração depois da pintura: criar o AudioContext dentro do toque custava ~160 ms de INP (18/11).
+const depoisDePintar = (fn) => requestAnimationFrame(() => setTimeout(fn, 0));
 
 // ---------- utilidades de tela
 function aviso(html, cls = '') {
@@ -30,7 +37,7 @@ export function fechar() { sobre.className = ''; setTimeout(() => { if (!sobre.c
 
 /** Mostra o que o XP destravou: nível novo, estágio novo, conquistas. */
 export function comemorar(r, xp) {
-  if (xp) { aviso(`${icone('estrela')}<b>+${xp} XP</b>`, 'xp'); som.somXP(); som.vibrar(30); }
+  if (xp) { aviso(`${icone('estrela')}<b>+${xp} XP</b>`, 'xp'); depoisDePintar(() => { som.iniciarAudio(); som.somXP(); som.vibrar(30); }); }
   if (r?.perfeito) setTimeout(() => aviso(`${icone('trofeu')}<b>Dia perfeito</b> +50 XP`, 'ouro'), 500);
   r?.novas?.forEach((c, i) => setTimeout(() => aviso(`${icone('trofeu')}<span><b>${esc(c.nome)}</b><br>${esc(c.desc)}</span>`, 'ouro'), 900 + i * 700));
   if (r?.subiu) setTimeout(() => {
@@ -46,13 +53,16 @@ const proximoEstagio = (n) => { const alvo = [3, 6, 10, 15, 21].find((x) => x > 
 
 // ---------- telas
 function cabecalhoHeroi() {
-  const nv = st.nivel(), e = st.estagio(nv.n);
+  const nv = st.nivel(), e = st.estagio(nv.n), p = Math.max(0.03, nv.pct);
+  const de = !xpVisto ? p : xpVisto.n === nv.n ? xpVisto.p : 0.03;
+  const ganhou = xpVisto && (nv.n > xpVisto.n || p > xpVisto.p);
+  xpVisto = { n: nv.n, p };
   return `<section class="cartao heroi-cartao">
     <div class="heroi-arte">${heroi(e)}</div>
     <div class="heroi-info">
       <p class="rot">${TITULOS[e].toUpperCase()}</p>
       <h2>Nível ${nv.n}</h2>
-      <div class="barra" role="progressbar" aria-valuenow="${Math.round(nv.pct * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${Math.max(3, nv.pct * 100)}%"></i></div>
+      <div class="barra${ganhou ? ' ganhou' : ''}" role="progressbar" aria-valuenow="${Math.round(nv.pct * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="--p:${de}" data-p="${p}"></i></div>
       <p class="fraco">${nv.resto} de ${nv.falta} XP</p>
     </div></section>`;
 }
@@ -81,10 +91,10 @@ function telaHoje() {
     <header class="topo"><div><p class="fraco">${DIAS[agora.getDay()]}, ${agora.getDate()}/${agora.getMonth() + 1}</p><h1>${ola}${S.perfil.nome ? ', ' + esc(S.perfil.nome) : ''}</h1></div>
       <button class="seq" data-a="sequencia" aria-label="Sequência de ${seq.seq} dias">${icone('fogo')}<b>${seq.seq}</b></button></header>
     ${cabecalhoHeroi()}
-    <section class="tres">
-      <div><b>${feitas}<small>/${ms.length}</small></b><span>missões hoje</span></div>
-      <div><b>${min}<small>/150</small></b><span>min na semana</span></div>
-      <div><b>${u7.total}<small>/7</small></b><span>dias ativos</span></div>
+    <section class="tres aneis" aria-live="off">
+      <div>${anel(feitas, ms.length, 'var(--verde)', 'm')}<span>missões hoje</span></div>
+      <div>${anel(min, 150, 'var(--laranja)', 'min')}<span>min na semana</span></div>
+      <div>${anel(u7.total, 7, 'var(--azul)', 'd')}<span>dias ativos</span></div>
     </section>
     ${!instalado() && instalar ? `<button class="cartao linha-acao" data-a="instalar">${icone('baixar')}<span><b>Instalar o app</b><br><small>Abre em tela cheia e funciona sem internet</small></span>${icone('seta')}</button>` : ''}
     ${cartaoTreino}
@@ -95,11 +105,20 @@ function telaHoje() {
   </main>`;
 }
 
+/** Anel que fecha conforme o valor chega na meta (referência: anéis do Apple Fitness). */
+function anel(v, max, cor, k) {
+  const p = Math.min(1, v / max), de = anelVisto[k] ?? 0;
+  anelVisto[k] = p;
+  const fechou = p >= 1 && de < 1 && anelVisto.pronto ? ' fechou' : '';
+  return `<span class="anel${p >= 1 ? ' cheio' : ''}${fechou}" style="--c:${cor}"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="trilho" cx="32" cy="32" r="27"/><circle class="arco" cx="32" cy="32" r="27" pathLength="100" style="--de:${de}" data-p="${p}"/></svg><b>${v}<small>/${max}</small></b></span>`;
+}
+
 function linhaMissao(m) {
   const pips = m.meta > 1 ? `<div class="pips">${Array.from({ length: m.meta }, (_, i) => `<i class="${i < m.feito ? 'on' : ''}"></i>`).join('')}<small>${m.feito} de ${m.meta}</small></div>` : '';
   const sub = m.gatilho || m.sub || '';
   const acao = m.especial === 'resp' ? 'respirar' : 'marcar';
-  return `<button class="missao ${m.completa ? 'ok' : ''}" data-a="${m.completa ? 'nada' : acao}" data-id="${m.id}" ${m.completa ? 'aria-disabled="true"' : ''}>
+  const anima = tocou?.id === m.id ? (m.completa ? ' tocou acabou' : ' tocou') : '';
+  return `<button class="missao ${m.completa ? 'ok' : ''}${anima}" data-a="${m.completa ? 'nada' : acao}" data-id="${m.id}" ${m.completa ? 'aria-disabled="true"' : ''}>
     <span class="tile">${icone(m.icone)}</span>
     <span class="mtxt"><b>${m.nome}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${pips}</span>
     <span class="mfim">${m.completa ? icone('check') : `<em>+${m.xp}</em>`}</span></button>`;
@@ -155,11 +174,11 @@ function telaProgresso() {
       <button class="bt fantasma" data-a="medir">${icone('mais')}Medida</button></header>
     <section class="cartao"><p class="rot">CINTURA</p>${grafico(cint, '#34d399', 'cm')}</section>
     <section class="cartao"><p class="rot">PESO</p>${grafico(peso, '#e5e7eb', 'kg')}</section>
-    <section class="tres"><div><b>${S.treinos.length}</b><span>treinos</span></div><div><b>${tot}</b><span>minutos</span></div><div><b>${seq.seq}</b><span>dias seguidos</span></div></section>
+    <section class="tres" aria-live="off"><div><b>${S.treinos.length}</b><span>treinos</span></div><div><b>${tot}</b><span>minutos</span></div><div><b>${seq.seq}</b><span>dias seguidos</span></div></section>
     <section class="cartao"><p class="rot">MINUTOS POR SEMANA · META 150</p>
-      <div class="barras" style="grid-template-columns:repeat(${semanas.length}, minmax(0, 56px))">${semanas.map((x, i) => `<div class="${i === semanas.length - 1 ? 'atual' : ''}"><div class="col"><em style="bottom:${(x.m / mxSem) * 100}%">${x.m}</em><i style="height:${Math.max(2, (x.m / mxSem) * 100)}%" class="${x.m >= 150 ? 'bateu' : ''}"></i></div><span>${i === semanas.length - 1 ? 'esta' : ddmm(x.ini)}</span></div>`).join('')}<hr style="bottom:calc(20px + ${150 / mxSem} * (100% - 20px))"></div>
+      <div class="barras" style="grid-template-columns:repeat(${semanas.length}, minmax(0, 56px))">${semanas.map((x, i) => `<div class="${i === semanas.length - 1 ? 'atual' : ''}" style="--i:${i}"><div class="col"><em style="bottom:${(x.m / mxSem) * 100}%">${x.m}</em><i style="height:${Math.max(2, (x.m / mxSem) * 100)}%" class="${x.m >= 150 ? 'bateu' : ''}"></i></div><span>${i === semanas.length - 1 ? 'esta' : ddmm(x.ini)}</span></div>`).join('')}<hr style="bottom:calc(20px + ${150 / mxSem} * (100% - 20px))"></div>
       <p class="fraco pequeno">A linha tracejada é a meta de 150 minutos. Cada barra é uma semana, pela data da segunda-feira.</p></section>
-    <section class="cartao"><p class="rot">ÚLTIMOS 35 DIAS</p><div class="calend">${dias.map((d) => `<i class="${d.perfeito ? 'p' : d.xp >= 120 ? 'a3' : d.xp >= 50 ? 'a2' : d.xp > 0 ? 'a1' : ''}" title="${d.k}"></i>`).join('')}</div>
+    <section class="cartao"><p class="rot">ÚLTIMOS 35 DIAS</p><div class="calend">${dias.map((d, i) => `<i class="${d.perfeito ? 'p' : d.xp >= 120 ? 'a3' : d.xp >= 50 ? 'a2' : d.xp > 0 ? 'a1' : ''}" title="${d.k}" style="--i:${i}"></i>`).join('')}</div>
       <p class="fraco pequeno">Mais claro = mais missões. Dourado = dia perfeito. Você tem ${seq.congelamentos} de 2 congelamentos nesta semana.</p></section>
     <h3 class="sec">Conquistas · ${Object.keys(S.conquistas).length} de ${CONQUISTAS.length}</h3>
     <section class="conq">${CONQUISTAS.map((c) => `<div class="${S.conquistas[c.id] ? 'on' : ''}">${icone(S.conquistas[c.id] ? c.ic : 'cadeado')}<b>${c.nome}</b><small>${c.desc}</small></div>`).join('')}</section>
@@ -212,13 +231,52 @@ function abrirEscolha(qual) {
 const TELAS = { hoje: telaHoje, treinos: telaTreinos, progresso: telaProgresso, perfil: telaPerfil };
 function ir(r, anim = true) {
   rota = TELAS[r] ? r : 'hoje';
-  TELAS[rota]();
-  if (anim) app.firstElementChild?.classList.add('entra');
-  abas.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.ir === rota));
-  scrollTo(0, 0);
+  const troca = () => {
+    TELAS[rota]();
+    if (anim) app.firstElementChild?.classList.add('entra');
+    abas.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.ir === rota));
+    abas.style.setProperty('--aba', Object.keys(TELAS).indexOf(rota));
+    scrollTo(0, 0);
+    depois();
+  };
+  if (anim && document.startViewTransition && !reduz()) document.startViewTransition(troca); else troca();
   if (location.hash.slice(1) !== rota) history.replaceState(null, '', '#' + rota);
 }
-export const redesenhar = () => { const y = scrollY; TELAS[rota](); scrollTo(0, y); };
+export const redesenhar = () => { const y = scrollY; TELAS[rota](); scrollTo(0, y); depois(); };
+
+/** Depois de desenhar a tela: barra de XP enche, números contam, +XP voa da missão marcada. */
+function depois() {
+  const r = reduz();
+  app.querySelectorAll('.barra i[data-p]').forEach((i) => {
+    if (r) i.style.setProperty('--p', i.dataset.p);
+    else requestAnimationFrame(() => requestAnimationFrame(() => i.style.setProperty('--p', i.dataset.p)));
+  });
+  app.querySelectorAll('.arco[data-p]').forEach((c) => {
+    const fim = () => c.style.setProperty('--de', c.dataset.p);
+    if (r) fim(); else requestAnimationFrame(() => requestAnimationFrame(fim));
+  });
+  anelVisto.pronto = true;
+  app.querySelectorAll('.tres b').forEach((b, k) => {
+    const no = b.firstChild, alvo = parseInt(no.textContent, 10), chave = rota + k, de = numVisto[chave] ?? 0;
+    numVisto[chave] = alvo;
+    if (!r && de !== alvo) contar(no, de, alvo);
+  });
+  if (tocou) {
+    const el = app.querySelector(`.missao[data-id="${tocou.id}"]`);
+    if (el && tocou.xp && !r) el.insertAdjacentHTML('beforeend', `<span class="voa" aria-hidden="true">+${tocou.xp} XP</span>`);
+    tocou = null;
+  }
+}
+function contar(no, de, ate) {
+  const t0 = performance.now(), dur = 650;
+  no.textContent = de;
+  const passo = (t) => {
+    const k = Math.min(1, (t - t0) / dur);
+    no.textContent = Math.round(de + (ate - de) * (1 - (1 - k) ** 3));
+    if (k < 1) requestAnimationFrame(passo);
+  };
+  requestAnimationFrame(passo);
+}
 
 // ---------- boas-vindas (8 telas; cada resposta muda algo no plano — BAR 3.10)
 const ob = { i: 0, folego: 1 };
@@ -286,10 +344,10 @@ function abrirRespiracao() {
   const bolha = $('.bolha i'), txt = $('#resp-txt'), tt = $('#resp-t');
   resp = setInterval(() => {
     const s = (performance.now() - ini) / 1000, c = s % 10, f = c < 4 ? 'Puxe' : 'Solte';
-    if (f !== fase) { fase = f; txt.textContent = f; bolha.style.transitionDuration = f === 'Puxe' ? '4s' : '6s'; bolha.style.transform = f === 'Puxe' ? 'scale(1)' : 'scale(.45)'; som.vibrar(f === 'Puxe' ? 40 : [20, 40, 20]); }
+    if (f !== fase) { fase = f; txt.textContent = f; bolha.style.transitionDuration = f === 'Puxe' ? '4s' : '6s'; if (reduz()) bolha.style.opacity = f === 'Puxe' ? '1' : '.4'; else bolha.style.transform = f === 'Puxe' ? 'scale(1)' : 'scale(.45)'; som.vibrar(f === 'Puxe' ? 40 : [20, 40, 20]); }
     const r = Math.max(0, Math.ceil(total - s));
     tt.textContent = `${Math.floor(r / 60)}:${String(r % 60).padStart(2, '0')}`;
-    if (s >= total) { clearInterval(resp); resp = null; fechar(); som.somFeito(); const x = st.marcar('respiracao'); if (x) comemorar(x, x.xp); redesenhar(); }
+    if (s >= total) { clearInterval(resp); resp = null; fechar(); som.somFeito(); const x = st.marcar('respiracao'); if (x) { tocou = { id: 'respiracao', xp: x.xp }; comemorar(x, x.xp); } redesenhar(); }
   }, 100);
 }
 
@@ -322,7 +380,7 @@ function lembretes() {
 const acoes = {
   nada() {},
   fechar,
-  marcar(el) { som.iniciarAudio(); const x = st.marcar(el.dataset.id); if (x) { comemorar(x, x.xp); if (x.completa) som.somFeito(); redesenhar(); st.pedirPersistencia(); } },
+  marcar(el) { const x = st.marcar(el.dataset.id); if (x) { tocou = { id: el.dataset.id, xp: x.xp }; comemorar(x, x.xp); if (x.completa) depoisDePintar(som.somFeito); redesenhar(); st.pedirPersistencia(); } },
   respirar: abrirRespiracao,
   'resp-sair'() { clearInterval(resp); resp = null; fechar(); },
   treino(el) {
@@ -376,7 +434,7 @@ const acoes = {
   apagar() { modal(`<h2>Apagar tudo?</h2><p class="fraco">Nível, XP, treinos e medidas somem deste aparelho. Não dá para desfazer.</p><button class="bt perigo grande" data-a="apagar-sim">Apagar tudo</button><button class="bt fantasma" data-a="fechar">Cancelar</button>`); },
   'apagar-sim'() { st.substituir(st.novoEstado()); fechar(); ob.i = 0; boasVindas(); },
   'nivel-treino'(el) { S.nivelTreino = Math.min(5, Math.max(1, S.nivelTreino + +el.dataset.d)); st.conferirConquistas(); st.salvar(); redesenhar(); },
-  'ob-primeira'() { som.iniciarAudio(); comemorar(st.ganharXP(10), 10); st.pedirPersistencia(); ob.i = 1; setTimeout(boasVindas, 650); },
+  'ob-primeira'() { comemorar(st.ganharXP(10), 10); st.pedirPersistencia(); ob.i = 1; setTimeout(boasVindas, 650); },
   'ob-prox'() { lerOnboarding(); ob.i++; boasVindas(); },
   'ob-folego'(el) { ob.folego = +el.dataset.i; S.nivelTreino = +el.dataset.n; boasVindas(); },
   'ob-esporte'(el) { S.perfil.diaEsporte = +el.dataset.v; boasVindas(); },
