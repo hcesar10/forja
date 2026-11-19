@@ -60,21 +60,23 @@ function entrar(i) {
   if (!P.pausado) v.play().catch(() => {});
   $('#pl-selo').textContent = t.rotulo; $('#pl-selo').hidden = f.tipo === 'prep';
   const alvo = f.tipo === 'prep' ? proximoReal(i) : null;
-  $('#pl-secao').textContent = alvo ? 'A SEGUIR' + (alvo.secao ? ' · ' + alvo.secao : '') : f.secao || t.rotulo;
+  // descanso livre (tiros): o nome grande já é o do próximo exercício, para ler de longe
+  $('#pl-secao').textContent = alvo ? 'A SEGUIR' + (alvo.secao ? ' · ' + alvo.secao : '') : f.livre ? 'RECUPERE · A SEGUIR' : f.secao || t.rotulo;
   $('#pl-nome').textContent = f.tipo === 'desc' ? 'Descanso' : ex.nome;
   $('#pl-meta').textContent = f.lado || f.meta || '';
   $('#pl-dica').textContent = f.tipo === 'desc' || f.tipo === 'leve' ? '' : ex.dica;
   $('#pl-prep').hidden = true; // a prévia fica nítida: é a hora de ver o movimento
   $('#pl-ritmo').hidden = !f.ritmo;
   const prox = proximoReal(f.tipo === 'prep' ? i + 1 : i);
-  $('#pl-seguir').hidden = !prox;
+  $('#pl-seguir').hidden = !prox || !!f.livre;
   if (prox) { $('#pl-simg').src = `clips/${pad(prox.ex)}.jpg`; $('#pl-snome').textContent = prox.tipo === 'desc' ? 'Descanso' : EX[prox.ex].nome + (prox.lado ? ' · outro lado' : ''); }
   som.batida(f.tipo === 'prep' ? TIPO[(proximoReal(i) || f).tipo].bpm : t.bpm, a.musica);
   // voz: dá para seguir sem olhar a tela (BAR 2.2)
   const fala = f.tipo === 'prep' ? `A seguir: ${ex.nome}.${f.lado ? ' ' + f.lado + '.' : ''}`
-    : f.tipo === 'forte' ? 'Forte!' : f.tipo === 'leve' ? 'Recupere.' : f.tipo === 'desc' ? 'Descanso. Beba água.'
+    : f.tipo === 'forte' ? 'Forte!' : f.tipo === 'leve' ? (f.livre ? `Recupere. A seguir: ${ex.nome}.` : 'Recupere.') : f.tipo === 'desc' ? 'Descanso. Beba água.'
     : f.tipo === 'resp' ? 'Respire pela barriga. Puxe em quatro, solte em seis.' : P.fases[i - 1]?.tipo === 'prep' ? 'Vai!' : `${ex.nome}.`;
-  som.falar(fala, a.voz);
+  // a voz entra um pouco depois, para não abafar o bipe do fim da fase anterior (Android baixa o som enquanto fala)
+  setTimeout(() => { if (P && P.i === i) som.falar(fala, a.voz); }, 450);
   if (f.tipo !== 'prep') som.vibrar(f.tipo === 'forte' ? [60, 40, 60] : 40);
 }
 

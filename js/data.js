@@ -91,7 +91,7 @@ function comPrep(lista, prep) {
   lista.forEach((x, i) => {
     const ant = lista[i - 1];
     const mudou = !ant || ant.ex !== x.ex || !!ant.espelhar !== !!x.espelhar;
-    if (x.tipo !== 'desc' && mudou && prep > 0)
+    if (x.tipo !== 'desc' && !x.livre && mudou && prep > 0) // o descanso livre já mostra o próximo exercício
       out.push({ ex: x.ex, tipo: 'prep', dur: i === 0 ? 6 : prep, espelhar: x.espelhar, lado: x.lado });
     out.push(x);
   });
@@ -145,11 +145,12 @@ const META = {
 const CIRC_A = [[16, 21, 17, 18, 5, 24], [16, 21, 17, 18, 5, 24], [27, 21, 17, 18, 5, 24], [27, 21, 17, 18, 5, 24], [27, 21, 17, 18, 5, 24, 25]];
 // Flexão por volta e nível (pedido do usuário): parede, parede, cadeira → só cadeira → entra o chão aos poucos → só chão.
 const FLEXAO = [[2, 2, 21], [21, 21, 21], [21, 21, 21, 30], [21, 21, 30, 30], [30, 30, 30]];
-const TIROS_BASE = [24, 20, 29, 16, 27, 22, 19, 17];
+const TIROS_BASE = [24, 20, 29, 16, 27, 22, 19, 28]; // 19/11: patinador com salto no lugar do avanço (ele quer mais pulo)
 const TIROS = [24, 27, 28, 29, 20, 17, 19, 22];
 const PERNAS = [16, 17, 19, 23, 22, 24, 27, 28, 29];
 const CFG_A = [{ v: 3, w: 40, p: 10, d: 40, fin: 2 }, { v: 3, w: 45, p: 8, d: 35, fin: 3 }, { v: 4, w: 40, p: 7, d: 30, fin: 2 }, { v: 4, w: 45, p: 6, d: 30 }, { v: 3, w: 50, p: 5, d: 25, fin: 2 }];
-const CFG_B = [{ n: 14, f: 30, l: 45 }, { n: 14, f: 35, l: 40 }, { n: 14, f: 40, l: 40 }, { n: 15, f: 40, l: 35 }, { n: 16, f: 45, l: 30 }];
+// 19/11: o usuário achou 45 s de recuperação demais e o esforço médio para baixo: tiro mais longo, descanso mais curto.
+const CFG_B = [{ n: 21, f: 35, l: 20 }, { n: 21, f: 40, l: 20 }, { n: 21, f: 40, l: 15 }, { n: 19, f: 45, l: 15 }, { n: 18, f: 50, l: 15 }];
 
 /** Monta um treino. opts: { nivel 1..5, seed (número do dia), descarga (semana 12) } */
 export function buildTreino(tipo, opts = {}) {
@@ -178,7 +179,10 @@ export function buildTreino(tipo, opts = {}) {
       const id = pool[i % pool.length];
       const s = `${rot} ${i + 1} DE ${qtd}`;
       L.push(f(id, 'forte', forte, { secao: s, vel: 1.15, meta: META[id] }));
-      if (i < qtd - 1) L.push(f(8, 'leve', leve, { secao: s, vel: 0.7, meta: 'Passo leve de um lado para o outro. Respire fundo.' })); // depois do último tiro vem a volta à calma
+      // 19/11: a recuperação era sempre o soco com passo lateral, e o usuário achou ruim repetir 13 vezes.
+      // Agora é descanso livre (andar e respirar) com o vídeo do próximo tiro, em câmera lenta, como prévia.
+      const prox = pool[(i + 1) % pool.length];
+      if (i < qtd - 1) L.push(f(prox, 'leve', leve, { secao: s, vel: 0.6, livre: true, meta: 'Ande pela sala, respire e beba água.' })); // depois do último tiro vem a volta à calma
     }
   };
 
@@ -193,7 +197,7 @@ export function buildTreino(tipo, opts = {}) {
     L = aquecimento();
     tiros(corta(CFG_B[n].n), CFG_B[n].f, CFG_B[n].l, 'TIRO');
     L.push(...voltaCalma(r));
-    return comPrep(L, 4);
+    return comPrep(L, 8); // 19/11: 4 s era pouco e a voz cobria o bipe
   }
   if (tipo === 'X') {
     const pool = embaralha([27, 20, 28, 29, 17, 24], r).slice(0, 4);
@@ -203,7 +207,7 @@ export function buildTreino(tipo, opts = {}) {
       L.push(f(8, 'leve', 30, { secao: `RODADA ${v} DE 3`, vel: 0.7, meta: 'Passo leve. Respire fundo.' }));
     }
     L.push(f(15, 'resp', 40, { meta: 'Puxe em 4 segundos · solte em 6', ritmo: true }));
-    return comPrep(L, 4);
+    return comPrep(L, 6);
   }
   // Q — quadril e postura (sem promessa de corrigir a pelve: BAR "fora do bar")
   L = [

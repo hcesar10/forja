@@ -265,11 +265,11 @@ input[type="number"]::-webkit-inner-spin-button { appearance: none; } .duo { dis
 .pl-xp { position: absolute; right: 12px; bottom: 12px; font-weight: 900; font-size: 22px; color: var(--ouro); opacity: 0; text-shadow: 0 2px 8px #000; }
 .pl-xp.sobe { animation: xp 1.1s var(--ease); } @keyframes xp { 0% { opacity: 0; transform: translateY(14px) scale(.7); } 25% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-34px); } }
 .pl-info { padding: 16px 18px 0; display: grid; gap: 3px; align-content: start; min-height: 0; }
-.pl-secao { color: var(--cor); font-weight: 900; font-size: 14px; letter-spacing: .1em; }
-.pl-info h1 { font-size: clamp(28px, 8.4vw, 40px); line-height: 1.05; font-weight: 900; }
-.pl-meta { font-size: 19px; font-weight: 700; color: #dbe4ee; } .pl-dica { font-size: 15px; color: var(--fraco); }
-.pl-seguir { margin: 10px 14px 0; display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; background: #10161d; border: 1.5px solid #1f2935; border-radius: 14px; padding: 6px; transition: border-color .2s, background .2s; }
-.pl-seguir img { width: 64px; height: 40px; object-fit: cover; border-radius: 9px; display: block; } .pl-seguir small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .1em; color: var(--fraco); } .pl-seguir b { font-size: 15px; }
+.pl-secao { color: var(--cor); font-weight: 900; font-size: 16px; letter-spacing: .1em; }
+.pl-info h1 { font-size: clamp(32px, 10vw, 48px); line-height: 1.05; font-weight: 900; }
+.pl-meta { font-size: 22px; font-weight: 700; color: #dbe4ee; } .pl-dica { font-size: 15px; color: var(--fraco); }
+.pl-seguir { margin: 10px 14px 0; display: grid; grid-template-columns: 96px 1fr; gap: 10px; align-items: center; background: #10161d; border: 1.5px solid #1f2935; border-radius: 14px; padding: 6px; transition: border-color .2s, background .2s; }
+.pl-seguir img { width: 96px; height: 60px; object-fit: cover; border-radius: 9px; display: block; } .pl-seguir small { display: block; font-size: 13px; font-weight: 800; letter-spacing: .1em; color: var(--fraco); } .pl-seguir b { font-size: clamp(20px, 6vw, 26px); line-height: 1.1; font-weight: 900; } /* 19/11: legível com o celular longe */
 .pl-seguir.logo { border-color: var(--ouro); background: #1f1908; } .pl-seguir.logo small { color: var(--ouro); }
 .pl-tempo { padding: 0 16px; text-align: center; display: grid; align-content: center; min-height: 0; container-type: size; }
 .pl-num { font-size: clamp(88px, min(48vw, 74cqh), 210px); line-height: .92; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: -.04em; color: #fff; }
